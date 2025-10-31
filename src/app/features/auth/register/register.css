@@ -1,6 +1,5 @@
 /* src/app/features/auth/register/register.css */
 
-/* top pill nav */
 .auth-tabs {
   background: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 80%);
   border: 1px solid rgba(255,255,255,0.08);
@@ -36,7 +35,6 @@
   border-radius: 1px;
 }
 
-/* card look */
 .auth-card {
   background: linear-gradient(
     160deg,
@@ -50,7 +48,6 @@
   color: #fff;
 }
 
-/* fancy input groups */
 .custom-input-group .input-group-text {
   background: rgba(0,0,0,0.4);
   border: 1px solid rgba(255,255,255,0.12);
@@ -82,7 +79,6 @@
   outline: none;
 }
 
-/* purple CTA button */
 .primary-btn {
   background: linear-gradient(
     90deg,
@@ -107,7 +103,6 @@
     0 0 80px rgba(140,91,255,0.6);
 }
 
-/* success / error toast */
 .msg-block {
   font-size: 0.8rem;
   border-radius: 0.5rem;

@@ -1,6 +1,5 @@
 /* src/app/app.css */
 
-/* Full-screen gradient background, shared for login & register pages */
 .auth-page {
   min-height: 100vh;
   width: 100%;
@@ -11,7 +10,6 @@
   position: relative;
 }
 
-/* Glow/vignette overlay for nicer depth */
 .auth-page::after {
   content: '';
   position: absolute;
@@ -26,7 +24,6 @@
   opacity: 0.4;
 }
 
-/* Make sure children sit above the ::after glow */
 .auth-page > .w-100 {
   position: relative;
   z-index: 2;

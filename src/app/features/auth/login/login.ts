@@ -13,11 +13,9 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./login.css']
 })
 export class LoginComponent {
-  // form fields
   email: string = '';
   password: string = '';
 
-  // ui feedback
   error: string | null = null;
   success: string | null = null;
 
@@ -29,46 +27,36 @@ export class LoginComponent {
   ) {}
 
   onSubmit() {
-    // clear any previous message
     this.clearToasts();
 
-    // basic guard
     if (!this.email || !this.password) {
         this.showError('Please enter email and password.');
         return;
     }
 
-    // call backend via AuthService
     this.auth.login(this.email, this.password)
       .then(res => {
-        // res should be { access_token, ... } from FastAPI
         this.showSuccess('Logged in successfully.');
 
-        // TODO later:
-        // save token, navigate to dashboard, etc.
-        // this.router.navigate(['/dashboard']);
+
       })
       .catch(err => {
-        // backend failed / wrong creds / network
         this.showError('Login failed. Please check your credentials.');
       });
   }
 
-  // helper to show success toast for 5s
   private showSuccess(msg: string) {
     this.success = msg;
     this.error = null;
     this.autoHideToast();
   }
 
-  // helper to show error toast for 5s
   private showError(msg: string) {
     this.error = msg;
     this.success = null;
     this.autoHideToast();
   }
 
-  // start 5-second auto hide timer
   private autoHideToast() {
     if (this.toastTimer) {
       clearTimeout(this.toastTimer);

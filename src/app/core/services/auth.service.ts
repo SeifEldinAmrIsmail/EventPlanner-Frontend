@@ -15,7 +15,7 @@ export class AuthService {
     if (!res.ok) {
       throw new Error('Login failed');
     }
-    return res.json(); // returns { access_token, ... }
+    return res.json();
   }
 
   async register(email: string, password: string) {
@@ -28,6 +28,6 @@ export class AuthService {
     if (!res.ok) {
       throw new Error('Register failed');
     }
-    return res.json(); // returns { user_id, email }
+    return res.json();
   }
 }

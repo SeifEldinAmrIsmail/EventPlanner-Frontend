@@ -13,11 +13,9 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./register.css']
 })
 export class RegisterComponent {
-  // form fields
   email: string = '';
   password: string = '';
 
-  // ui feedback
   error: string | null = null;
   success: string | null = null;
 
@@ -43,11 +41,9 @@ export class RegisterComponent {
 
     this.auth.register(this.email, this.password)
       .then(res => {
-        // res should be { user_id, email } from FastAPI
         this.showSuccess('Account created successfully.');
 
-        // optional: move user to /login after short delay:
-        // setTimeout(() => this.router.navigate(['/login']), 800);
+
       })
       .catch(err => {
         this.showError('Registration failed. That email may already exist.');

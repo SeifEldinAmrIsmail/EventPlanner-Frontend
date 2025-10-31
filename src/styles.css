@@ -11,7 +11,6 @@
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Segoe UI", sans-serif;
 }
 
-/* The pill with Login / Register at the top */
 .auth-toggle-pill {
   display: flex;
   gap: 1rem;
@@ -38,7 +37,6 @@
   color: #8bb0ff;
 }
 
-/* The glassy card in the center */
 .auth-card {
   width: 100%;
   max-width: 420px;
@@ -50,7 +48,6 @@
   color: #fff;
 }
 
-/* Header section inside the card */
 .auth-header-icon {
   width: 44px;
   height: 44px;
@@ -81,7 +78,6 @@
   margin: 0;
 }
 
-/* Form blocks */
 .form-label {
   font-size: 0.8rem;
   font-weight: 500;
@@ -142,7 +138,6 @@
   color: rgba(255,255,255,0.4);
 }
 
-/* Primary submit button */
 .primary-btn {
   background: linear-gradient(135deg,#4a52ff 0%,#6b4bff 50%,#8d5bff 100%);
   color: #fff;
@@ -166,7 +161,6 @@
   cursor: pointer;
 }
 
-/* Toast messages */
 .msg-block {
   border-radius: 6px;
   padding: 0.6rem 0.75rem;
@@ -188,7 +182,6 @@
   color: #ff7c7c;
 }
 
-/* Bottom link row under the button */
 .auth-bottom {
   font-size: 0.8rem;
   color: rgba(255,255,255,0.6);
