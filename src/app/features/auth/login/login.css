@@ -130,3 +130,8 @@
   color: #00ff9c;
   box-shadow: 0 10px 30px rgba(0,255,128,0.2);
 }
+.wide-card {
+  width: 560px !important;
+  max-width: 560px !important;
+  min-width: 560px !important;
+}
