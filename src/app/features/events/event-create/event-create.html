@@ -1,0 +1,112 @@
+<!-- Top pill nav (back to list) -->
+<div class="top-pills">
+  <a routerLink="/home" class="pill" aria-label="Back to home">
+    <i class="bi bi-arrow-left-short"></i>
+    Back to home
+  </a>
+</div>
+
+<div class="screen">
+  <div class="card">
+    <div class="card-head">
+      <div class="logo-glow"><i class="bi bi-calendar-plus"></i></div>
+      <h1>Create a new event</h1>
+      <p class="sub">Add the details for your next event</p>
+    </div>
+
+    <!-- success toast -->
+    <div *ngIf="success" class="toast toast-success" role="status">
+      <i class="bi bi-check2-circle"></i>
+      <span>{{ success }}</span>
+    </div>
+    <!-- error toast -->
+    <div *ngIf="error" class="toast toast-error" role="alert">
+      <i class="bi bi-x-circle"></i>
+      <span>{{ error }}</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <!-- Title -->
+      <label class="field">
+        <span class="label">Title <b>*</b></span>
+        <div class="input-wrap" [class.invalid]="f.title.invalid && f.title.touched">
+          <div class="lead"><i class="bi bi-type"></i></div>
+          <input formControlName="title" type="text" placeholder="e.g., Product Launch Meetup" />
+        </div>
+        <small class="hint" *ngIf="f.title.invalid && f.title.touched">Title is required (min 3 characters).</small>
+      </label>
+
+      <!-- Date -->
+      <label class="field two-col">
+        <span class="label">Date <b>*</b></span>
+        <div class="input-wrap" [class.invalid]="f.date.invalid && f.date.touched">
+          <div class="lead"><i class="bi bi-calendar3"></i></div>
+          <input formControlName="date" type="date" />
+        </div>
+        <small class="hint" *ngIf="f.date.invalid && f.date.touched">Date is required.</small>
+      </label>
+
+      <!-- Time -->
+      <label class="field two-col">
+        <span class="label">Time <b>*</b></span>
+        <div class="input-wrap" [class.invalid]="f.time.invalid && f.time.touched">
+          <div class="lead"><i class="bi bi-clock"></i></div>
+          <input formControlName="time" type="time" />
+        </div>
+        <small class="hint" *ngIf="f.time.invalid && f.time.touched">Time is required.</small>
+      </label>
+
+      <!-- Location -->
+      <label class="field">
+        <span class="label">Location</span>
+        <div class="input-wrap">
+          <div class="lead"><i class="bi bi-geo-alt"></i></div>
+          <input formControlName="location" type="text" placeholder="e.g., Hall A, Nile Expo Center" />
+        </div>
+      </label>
+
+      <!-- Description -->
+      <label class="field">
+        <span class="label">Description</span>
+        <div class="input-wrap ta">
+          <div class="lead"><i class="bi bi-text-paragraph"></i></div>
+          <textarea formControlName="description" rows="4" placeholder="What is this event about?"></textarea>
+        </div>
+      </label>
+
+      <!-- NEW: Invite people -->
+      <label class="field">
+        <span class="label">Invite people <small class="muted">(User IDs or emails)</small></span>
+        <div class="chips">
+          <span class="chip" *ngFor="let u of invitees; index as i">
+            {{ u }}
+            <button type="button" class="chip-x" (click)="removeInvite(i)">×</button>
+          </span>
+<input
+  type="text"
+  [value]="inviteDraft"
+  #inv
+  (input)="inviteDraft = inv.value"
+  (keydown.enter)="addInvite(); $event.preventDefault()"
+  (keydown.space)="addInvite(); $event.preventDefault()"
+  (blur)="addInvite(true)"
+  placeholder="Type an ID (or email) and press Enter"
+/>
+
+        </div>
+        <small class="hint">Tip: paste many separated by comma/space; duplicates are ignored.</small>
+      </label>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn-primary" type="submit" [disabled]="form.invalid || submitting">
+          <ng-container *ngIf="!submitting; else busy">
+            <i class="bi bi-plus-lg"></i> Create event
+          </ng-container>
+          <ng-template #busy><span class="spinner"></span> Creating…</ng-template>
+        </button>
+        <a routerLink="/home" class="btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

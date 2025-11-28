@@ -1,0 +1,66 @@
+<div class="page">
+  <div class="loading" *ngIf="busy"></div>
+
+  <div class="toolbar">
+    <div class="seg">
+      <button class="seg-btn" [class.active]="segment==='organized'" (click)="segment='organized'">Organizer</button>
+      <button class="seg-btn" [class.active]="segment==='invited'" (click)="segment='invited'">Invited</button>
+    </div>
+
+    <div class="search">
+      <input type="text" placeholder="Search by title, place, date…" [(ngModel)]="q" />
+    </div>
+
+    <a class="create" routerLink="/events/new">＋ Create Event</a>
+  </div>
+
+  <div class="alerts">
+    <div class="toast success" *ngIf="success">{{ success }}</div>
+    <div class="toast error" *ngIf="error">{{ error }}</div>
+  </div>
+
+  <div class="card" *ngIf="results.length; else empty">
+    <div class="list">
+      <div class="row" *ngFor="let e of results">
+        <div class="left">
+          <div class="title">{{ e.title }}</div>
+          <div class="meta">
+            <span>📅 {{ e.date | date:'mediumDate' }}</span>
+            <span>⏰ {{ e.time }}</span>
+            <span>📍 {{ e.location }}</span>
+          </div>
+
+          <!-- Inline invite box (only for organized segment) -->
+          <div class="invite-inline" *ngIf="segment==='organized' && inviteFor===e.id">
+            <input type="text" [(ngModel)]="inviteCsv" placeholder="Paste IDs/emails, separated by comma/space" />
+            <button class="btn send" (click)="sendInvites()">Send</button>
+            <button class="btn ghost" (click)="toggleInvite('')">Cancel</button>
+          </div>
+        </div>
+
+        <div class="right">
+          <a class="btn view" (click)="view(e.id)">View</a>
+
+          <!-- Organizer actions -->
+          <button class="btn" *ngIf="segment==='organized'" (click)="toggleInvite(e.id)">Invite</button>
+          <button class="btn danger" *ngIf="segment==='organized'" (click)="remove(e.id)">Delete</button>
+
+          <!-- Invitee quick respond -->
+          <div class="respond-pills" *ngIf="segment==='invited'">
+            <button class="pill ok" (click)="respond(e.id,'going')">Going</button>
+            <button class="pill maybe" (click)="respond(e.id,'maybe')">Maybe</button>
+            <button class="pill no" (click)="respond(e.id,'not_going')">Not going</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #empty>
+    <div class="card empty">
+      <h3>No {{ segment === 'organized' ? 'organized' : 'invited' }} events</h3>
+      <p *ngIf="segment==='organized'">Create your first event to get started.</p>
+      <p *ngIf="segment==='invited'">You don’t have invitations yet.</p>
+    </div>
+  </ng-template>
+</div>

@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -10,64 +10,70 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.html',
-  styleUrls: ['./login.css']
+  styleUrls: ['./login.css'],
 })
-export class LoginComponent {
-  email: string = '';
-  password: string = '';
+export class LoginComponent implements OnDestroy {
+  email = '';
+  password = '';
 
   error: string | null = null;
   success: string | null = null;
 
-  private toastTimer: any = null;
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
-  onSubmit() {
+  async onSubmit(): Promise<void> {
     this.clearToasts();
 
-    if (!this.email || !this.password) {
-        this.showError('Please enter email and password.');
-        return;
+    const email = this.email.trim();
+    if (!email || !this.password) {
+      this.showError('Please enter email and password.');
+      return;
     }
 
-    this.auth.login(this.email, this.password)
-      .then(res => {
-        this.showSuccess('Logged in successfully.');
+    try {
+      // Calls backend, stores access_token in localStorage
+      await this.auth.login(email, this.password);
 
+      this.showSuccess('Logged in successfully.');
 
-      })
-      .catch(err => {
-        this.showError('Login failed. Please check your credentials.');
-      });
+      // If we were redirected here by the guard, go back there; otherwise go to /home
+      const redirect = this.route.snapshot.queryParamMap.get('redirect') || '/home';
+      this.router.navigateByUrl(redirect, { replaceUrl: true });
+    } catch {
+      this.showError('Login failed. Please check your credentials.');
+    }
   }
 
-  private showSuccess(msg: string) {
+  // --- Toast helpers --------------------------------------------------------
+  private showSuccess(msg: string): void {
     this.success = msg;
     this.error = null;
     this.autoHideToast();
   }
 
-  private showError(msg: string) {
+  private showError(msg: string): void {
     this.error = msg;
     this.success = null;
     this.autoHideToast();
   }
 
-  private autoHideToast() {
-    if (this.toastTimer) {
-      clearTimeout(this.toastTimer);
-    }
-    this.toastTimer = setTimeout(() => {
-      this.clearToasts();
-    }, 5000);
+  private autoHideToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.clearToasts(), 5000);
   }
 
-  private clearToasts() {
+  private clearToasts(): void {
     this.error = null;
     this.success = null;
+  }
+
+  ngOnDestroy(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
   }
 }

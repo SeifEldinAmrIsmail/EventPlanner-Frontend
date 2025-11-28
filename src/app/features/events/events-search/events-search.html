@@ -1,0 +1,47 @@
+<div class="page">
+  <form class="toolbar" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="seg">
+      <button type="button"
+              class="seg-btn"
+              [class.active]="form.value.role === 'organizer'"
+              (click)="toggleRole('organizer')">Organizer</button>
+      <button type="button"
+              class="seg-btn"
+              [class.active]="form.value.role === 'attendee'"
+              (click)="toggleRole('attendee')">Invited</button>
+    </div>
+
+    <div class="search">
+      <input type="text" formControlName="q" placeholder="Search by title, place, date…" />
+    </div>
+
+    <button class="create" type="submit">Search</button>
+    <button class="create" type="button" (click)="clear()">Clear</button>
+  </form>
+
+  <div class="alerts">
+    <div class="toast error" *ngIf="error">{{ error }}</div>
+  </div>
+
+  <div class="card" *ngIf="results.length; else empty">
+    <div class="list">
+      <div class="row" *ngFor="let e of results">
+        <div class="left">
+          <div class="title">{{ e.title }}</div>
+          <div class="meta">
+            <span>📅 {{ e.date | date: 'mediumDate' }}</span>
+            <span *ngIf="e.time">⏰ {{ e.time }}</span>
+            <span *ngIf="e.location">📍 {{ e.location }}</span>
+          </div>
+        </div>
+        <div class="right">
+          <a class="btn view" [routerLink]="['/events', e.id]">View</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #empty>
+    <div class="card empty">No results.</div>
+  </ng-template>
+</div>
