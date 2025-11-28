@@ -4,71 +4,112 @@
     <div class="glow"></div>
     <h1><span class="emoji">🎟️</span> Event Planner</h1>
     <p class="tag">Plan, invite, and track RSVPs — fast.</p>
+
     <div class="cta">
+      <!-- Always go to events; authGuard will redirect guests to /login -->
       <a routerLink="/events/new" class="btn btn-primary">Create event</a>
       <a routerLink="/events" class="btn">My events</a>
       <a routerLink="/events/search" class="btn btn-ghost">Search</a>
     </div>
   </section>
+
   <!-- Two panels -->
   <section class="grid">
     <!-- Organizing -->
     <article class="card">
       <header>
         <h2>Organizing</h2>
+        <!-- Let guard decide; no manual /login routing here -->
         <a routerLink="/events" class="link">View all</a>
       </header>
-      <ng-container *ngIf="loading; else orgList">
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
+
+      <!-- If user isn't authenticated, show the empty call-to-action straight away -->
+      <ng-container *ngIf="!isAuthed">
+        <div class="empty">
+          <div class="empty-icon">✨</div>
+          <p>Sign in to see and manage your events.</p>
+          <a routerLink="/login" class="btn btn-small btn-primary">Sign in</a>
+        </div>
       </ng-container>
-      <ng-template #orgList>
-        <ul class="list" *ngIf="organizing.length; else emptyOrg">
-          <li *ngFor="let e of organizing; trackBy: trackById">
-            <a [routerLink]="['/events', e.id]" class="title">{{ e.title }}</a>
-            <div class="meta">{{ iso(e) | date : 'EEE, MMM d • h:mm a' }} • {{ e.location }}</div>
-          </li>
-        </ul>
-        <ng-template #emptyOrg>
-          <div class="empty">
-            <div class="empty-icon">✨</div>
-            <p>No events yet.</p>
-            <a routerLink="/events/new" class="btn btn-small btn-primary"
-              >Create your first event</a
-            >
-          </div>
+
+      <ng-container *ngIf="isAuthed">
+        <ng-container *ngIf="loading; else orgList">
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        </ng-container>
+
+        <ng-template #orgList>
+          <ul class="list" *ngIf="organizing.length; else emptyOrg">
+            <li *ngFor="let e of organizing; trackBy: trackById">
+              <a [routerLink]="['/events', e.id]" class="title">{{ e.title }}</a>
+              <div class="meta">
+                {{ iso(e) | date: 'EEE, MMM d • h:mm a' }} • {{ e.location }}
+              </div>
+            </li>
+          </ul>
+
+          <ng-template #emptyOrg>
+            <div class="empty">
+              <div class="empty-icon">✨</div>
+              <p>No events yet. Start your first one!</p>
+              <!-- Already authed inside this block, so go straight to /events/new -->
+              <a routerLink="/events/new" class="btn btn-small btn-primary">
+                Create event
+              </a>
+            </div>
+          </ng-template>
         </ng-template>
-      </ng-template>
+      </ng-container>
     </article>
+
     <!-- Invited -->
     <article class="card">
       <header>
         <h2>Invited</h2>
         <a routerLink="/events" class="link">View all</a>
       </header>
-      <ng-container *ngIf="loading; else invList">
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
+
+      <ng-container *ngIf="!isAuthed">
+        <div class="empty">
+          <div class="empty-icon">📫</div>
+          <p>Sign in to view your invitations.</p>
+          <a routerLink="/login" class="btn btn-small">Go to login</a>
+        </div>
       </ng-container>
-      <ng-template #invList>
-        <ul class="list" *ngIf="invited.length; else emptyInv">
-          <li *ngFor="let e of invited; trackBy: trackById">
-            <a [routerLink]="['/events', e.id]" class="title">{{ e.title }}</a>
-            <div class="meta">{{ iso(e) | date : 'EEE, MMM d • h:mm a' }} • {{ e.location }}</div>
-          </li>
-        </ul>
-        <ng-template #emptyInv>
-          <div class="empty">
-            <div class="empty-icon">📫</div>
-            <p>No invitations yet.</p>
-            <a routerLink="/events/search" class="btn btn-small">Browse public events</a>
-          </div>
+
+      <ng-container *ngIf="isAuthed">
+        <ng-container *ngIf="loading; else invList">
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        </ng-container>
+
+        <ng-template #invList>
+          <ul class="list" *ngIf="invited.length; else emptyInv">
+            <li *ngFor="let e of invited; trackBy: trackById">
+              <a [routerLink]="['/events', e.id]" class="title">{{ e.title }}</a>
+              <div class="meta">
+                {{ iso(e) | date: 'EEE, MMM d • h:mm a' }} • {{ e.location }}
+              </div>
+            </li>
+          </ul>
+
+          <ng-template #emptyInv>
+            <div class="empty">
+              <div class="empty-icon">📫</div>
+              <p>No invitations yet.</p>
+              <!-- Inside authed branch; just go to search -->
+              <a routerLink="/events/search" class="btn btn-small">
+                Browse public events
+              </a>
+            </div>
+          </ng-template>
         </ng-template>
-      </ng-template>
+      </ng-container>
     </article>
   </section>
+
   <!-- Quick tiles -->
   <section class="tiles">
     <a routerLink="/events/new" class="tile">
@@ -76,11 +117,13 @@
       <div class="tile-title">Quick create</div>
       <div class="tile-desc">Start an event in seconds.</div>
     </a>
+
     <a routerLink="/events" class="tile">
       <div class="tile-icon">📋</div>
       <div class="tile-title">Manage</div>
       <div class="tile-desc">Everything you organize & attend.</div>
     </a>
+
     <a routerLink="/events/search" class="tile">
       <div class="tile-icon">🔎</div>
       <div class="tile-title">Find events</div>

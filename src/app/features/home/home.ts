@@ -1,11 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError, finalize, map } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 
 import { EventService } from '../../core/services/event.service';
 import { EventSummary } from '../../core/models/event.model';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -15,54 +15,46 @@ import { EventSummary } from '../../core/models/event.model';
   styleUrls: ['./home.css'],
 })
 export class HomeComponent implements OnInit {
-  private readonly svc = inject(EventService);
+  private events = inject(EventService);
+  private auth = inject(AuthService);
 
   organizing: EventSummary[] = [];
   invited: EventSummary[] = [];
   loading = true;
-  error: string | null = null;
-
-  private toSummary(raw: any): EventSummary {
-    return {
-      id: String(raw.id),
-      title: String(raw.title ?? ''),
-      date: String(raw.date ?? ''),
-      time: String(raw.time ?? ''),
-      location: String(raw.location ?? ''),
-    };
-  }
+  isAuthed = false;
 
   ngOnInit(): void {
+    // ✅ Simple, correct auth check
+    this.isAuthed = this.auth.isLoggedIn();
+
+    if (!this.isAuthed) {
+      // Guest: just render static hero/tiles, no API calls
+      this.loading = false;
+      return;
+    }
+
+    // Authenticated: load previews for "Organizing" and "Invited"
     forkJoin({
-      mine: this.svc.myOrganized().pipe(
-        catchError(() => of([] as any[])),
-        map((arr) => (arr ?? []).map((x) => this.toSummary(x)))
-      ),
-      invited: this.svc.myInvited().pipe(
-        catchError(() => of([] as any[])),
-        map((arr) => (arr ?? []).map((x) => this.toSummary(x)))
-      ),
-    })
-      .pipe(
-        map(({ mine, invited }) => ({
-          organizing: (mine ?? []).slice(0, 5),
-          invited: (invited ?? []).slice(0, 5),
-        })),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe({
-        next: ({ organizing, invited }) => {
-          this.organizing = organizing;
-          this.invited = invited;
-        },
-        error: (err) =>
-          (this.error = err?.message ?? 'Failed to load your events.'),
-      });
+      mine: this.events.myOrganized(),
+      invited: this.events.myInvited(),
+    }).subscribe({
+      next: ({ mine, invited }) => {
+        this.organizing = (mine ?? []).slice(0, 5);
+        this.invited = (invited ?? []).slice(0, 5);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.loading = false;
+      },
+    });
   }
 
-  /** Build an ISO-like string for the Angular date pipe in the template */
-  iso = (e: EventSummary): string => `${e.date}T${e.time}:00`;
+  iso(e: EventSummary): string {
+    return `${e.date}T${e.time}:00`;
+  }
 
-  /** TrackBy helper for ngFor */
-  trackById = (_: number, e: EventSummary): string => e.id;
+  trackById(_: number, e: EventSummary): string {
+    return e.id;
+  }
 }

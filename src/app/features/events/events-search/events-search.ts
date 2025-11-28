@@ -1,12 +1,19 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  startWith,
+  catchError,
+  of,
+  finalize,
+} from 'rxjs';
 
-import { EventService, SearchParams } from '../../../core/services/event.service';
-
-type RoleFilter = '' | 'organizer' | 'attendee' | null;
+import { EventService } from '../../../core/services/event.service';
+import { EventSummary } from '../../../core/models/event.model';
 
 @Component({
   selector: 'app-events-search',
@@ -16,47 +23,57 @@ type RoleFilter = '' | 'organizer' | 'attendee' | null;
   styleUrls: ['./events-search.css'],
 })
 export class EventsSearchComponent {
+  // ✅ use inject() so it's available for field initializers
   private fb = inject(FormBuilder);
-  private svc = inject(EventService);
 
-  form = this.fb.group({
-    q: this.fb.control<string>(''),
-    date_from: this.fb.control<string>(''),
-    date_to: this.fb.control<string>(''),
-    role: this.fb.control<RoleFilter>(''),
-  });
+  constructor(private svc: EventService) {
+    this.initLiveSearch();
+  }
 
-  results: any[] = [];
   busy = false;
   error = '';
+  results: EventSummary[] = [];
 
-  async submit() {
-    this.busy = true;
-    this.error = '';
-    try {
-      const v = this.form.getRawValue();
-      const params: SearchParams = {
-        q: (v.q ?? '').trim() || undefined,
-        date_from: v.date_from || undefined,
-        date_to: v.date_to || undefined,
-        role: (v.role || undefined) as 'organizer' | 'attendee' | undefined,
-      };
-      this.results = await firstValueFrom(this.svc.search(params));
-    } catch (e: any) {
-      this.error = e?.message ?? 'Search failed';
-    } finally {
-      this.busy = false;
-    }
+  form = this.fb.nonNullable.group({
+    q: [''],
+    from: [''], // yyyy-MM-dd
+    to: [''],
+    role: ['all' as 'all' | 'organizer' | 'attendee'],
+  });
+
+  private initLiveSearch() {
+    this.form.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        startWith(this.form.value),
+        switchMap((v) => {
+          const role =
+            v.role && v.role !== 'all' ? (v.role as 'organizer' | 'attendee') : undefined;
+
+          this.busy = true;
+          this.error = '';
+
+          return this.svc
+            .search({
+              q: v.q?.trim() || undefined,
+              from: v.from || undefined,
+              to: v.to || undefined,
+              role,
+            })
+            .pipe(
+              catchError((e) => {
+                this.error = e?.error?.detail || e?.message || 'Search failed';
+                return of([] as EventSummary[]);
+              }),
+              finalize(() => (this.busy = false)),
+            );
+        })
+      )
+      .subscribe((rows) => (this.results = rows));
   }
 
   clear() {
-    this.form.reset({ q: '', date_from: '', date_to: '', role: '' });
-    this.results = [];
-  }
-
-  // <-- This is what your template calls
-  toggleRole(target: 'organizer' | 'attendee') {
-    const current = this.form.controls.role.value;
-    this.form.controls.role.setValue(current === target ? '' : target);
+    this.form.reset({ q: '', from: '', to: '', role: 'all' });
   }
 }

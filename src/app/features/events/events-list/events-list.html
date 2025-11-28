@@ -1,6 +1,14 @@
 <div class="page">
-  <div class="loading" *ngIf="busy"></div>
 
+  <!-- Back pill (same pattern as create page) -->
+  <div class="top-pills">
+    <a routerLink="/home" class="pill" aria-label="Back to home">
+      <i class="bi bi-arrow-left-short"></i>
+      Back to home
+    </a>
+  </div>
+
+  <!-- Toolbar -->
   <div class="toolbar">
     <div class="seg">
       <button class="seg-btn" [class.active]="segment==='organized'" (click)="segment='organized'">Organizer</button>
@@ -8,54 +16,52 @@
     </div>
 
     <div class="search">
-      <input type="text" placeholder="Search by title, place, date…" [(ngModel)]="q" />
+      <input
+        type="text"
+        placeholder="Search by title, place, or date…"
+        [(ngModel)]="q"
+      />
     </div>
 
     <a class="create" routerLink="/events/new">＋ Create Event</a>
   </div>
 
+  <!-- Alerts -->
   <div class="alerts">
     <div class="toast success" *ngIf="success">{{ success }}</div>
     <div class="toast error" *ngIf="error">{{ error }}</div>
   </div>
 
+  <!-- Results -->
   <div class="card" *ngIf="results.length; else empty">
     <div class="list">
       <div class="row" *ngFor="let e of results">
         <div class="left">
           <div class="title">{{ e.title }}</div>
           <div class="meta">
-            <span>📅 {{ e.date | date:'mediumDate' }}</span>
-            <span>⏰ {{ e.time }}</span>
-            <span>📍 {{ e.location }}</span>
-          </div>
-
-          <!-- Inline invite box (only for organized segment) -->
-          <div class="invite-inline" *ngIf="segment==='organized' && inviteFor===e.id">
-            <input type="text" [(ngModel)]="inviteCsv" placeholder="Paste IDs/emails, separated by comma/space" />
-            <button class="btn send" (click)="sendInvites()">Send</button>
-            <button class="btn ghost" (click)="toggleInvite('')">Cancel</button>
+            <span class="chip">
+              <i class="bi bi-calendar3"></i>
+              {{ e.date | date:'EEE, MMM d' }}
+            </span>
+            <span class="chip">
+              <i class="bi bi-clock"></i>
+              {{ e.time }}
+            </span>
+            <span class="chip" *ngIf="e.location">
+              <i class="bi bi-geo-alt"></i>
+              {{ e.location }}
+            </span>
           </div>
         </div>
-
         <div class="right">
           <a class="btn view" (click)="view(e.id)">View</a>
-
-          <!-- Organizer actions -->
-          <button class="btn" *ngIf="segment==='organized'" (click)="toggleInvite(e.id)">Invite</button>
           <button class="btn danger" *ngIf="segment==='organized'" (click)="remove(e.id)">Delete</button>
-
-          <!-- Invitee quick respond -->
-          <div class="respond-pills" *ngIf="segment==='invited'">
-            <button class="pill ok" (click)="respond(e.id,'going')">Going</button>
-            <button class="pill maybe" (click)="respond(e.id,'maybe')">Maybe</button>
-            <button class="pill no" (click)="respond(e.id,'not_going')">Not going</button>
-          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Empty state -->
   <ng-template #empty>
     <div class="card empty">
       <h3>No {{ segment === 'organized' ? 'organized' : 'invited' }} events</h3>

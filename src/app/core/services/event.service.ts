@@ -1,87 +1,57 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export type ApiAttendance = 'going' | 'maybe' | 'not_going';
-
-export interface SearchParams {
-  q?: string;
-  date_from?: string | undefined;
-  date_to?: string | undefined;
-  role?: 'organizer' | 'attendee' | undefined;
-}
+import { environment } from '../../../environments/environment';
+import {
+  EventInput, EventSummary, EventDetail, AttendanceStatus,
+} from '../models/event.model';
 
 @Injectable({ providedIn: 'root' })
 export class EventService {
-  private readonly base = '/events';
+  private http = inject(HttpClient);
+  private base = `${environment.apiUrl}/events`;
 
-  constructor(private http: HttpClient) {}
-
-  // ---------- CREATE ----------
-  /** Accepts date (yyyy-mm-dd) + optional time (HH:mm) and sends ISO date-time to the API. */
-  create(dto: {
-    title: string;
-    date: string;            // e.g. '2025-11-28'
-    time?: string;           // e.g. '14:45'
-    location?: string;
-    description?: string;
-    invitees?: string[];
-  }): Observable<any> {
-    const body: any = {
-      title: dto.title,
-      date: dto.time ? `${dto.date}T${dto.time}:00` : dto.date,
-      location: dto.location ?? '',
-      description: dto.description ?? '',
-      invitees: dto.invitees ?? [],
-    };
-    return this.http.post<any>(`${this.base}/`, body, { withCredentials: true });
+  /** Organizer creates an event */
+  create(body: EventInput): Observable<{ id: string }> {
+    return this.http.post<{ id: string }>(`${this.base}`, body);
   }
 
-  // ---------- LISTS ----------
-  myOrganized(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/mine`, { withCredentials: true });
-  }
-  myInvited(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/invited`, { withCredentials: true });
+  /** Events I organize */
+  myOrganized(): Observable<EventSummary[]> {
+    return this.http.get<EventSummary[]>(`${this.base}/mine`);
   }
 
-  // ---------- DETAIL / CRUD ----------
-  getById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.base}/${encodeURIComponent(id)}`, { withCredentials: true });
+  /** Events I’m invited to */
+  myInvited(): Observable<EventSummary[]> {
+    return this.http.get<EventSummary[]>(`${this.base}/invited`);
   }
+
+  getById(id: string): Observable<EventDetail> {
+    return this.http.get<EventDetail>(`${this.base}/${id}`);
+  }
+
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${encodeURIComponent(id)}`, { withCredentials: true });
+    return this.http.delete<void>(`${this.base}/${id}`);
   }
 
-  // ---------- ATTENDANCE ----------
-  respond(eventId: string, status: ApiAttendance): Observable<any> {
-    return this.http.post<any>(
-      `${this.base}/${encodeURIComponent(eventId)}/respond`,
-      { status },
-      { withCredentials: true }
-    );
+  /** Invite by email */
+  invite(id: string, email: string): Observable<{ ok: true }> {
+    return this.http.post<{ ok: true }>(`${this.base}/${id}/invite`, { email });
   }
 
-  // ---------- INVITES ----------
-  /** Backend endpoint expected: POST /events/{id}/invite { invitees: string[] } */
-  invite(eventId: string, invitees: string[]): Observable<void> {
-    return this.http.post<void>(
-      `${this.base}/${encodeURIComponent(eventId)}/invite`,
-      { invitees },
-      { withCredentials: true }
-    );
+  /** Attendee sets status */
+  respond(id: string, status: AttendanceStatus): Observable<{ ok: true }> {
+    return this.http.post<{ ok: true }>(`${this.base}/${id}/response`, { status });
   }
 
-  // ---------- SEARCH ----------
-  search(params: SearchParams): Observable<any[]> {
-    const q = params.q ?? '';
-    let hp = new HttpParams();
-    if (params.date_from) hp = hp.set('date_from', params.date_from);
-    if (params.date_to)   hp = hp.set('date_to', params.date_to);
-    if (params.role)      hp = hp.set('role', params.role);
-    return this.http.get<any[]>(
-      `${this.base}/search/${encodeURIComponent(q)}`,
-      { params: hp, withCredentials: true }
-    );
+  /** Search + filters */
+  search(opts: { q?: string; from?: string; to?: string; role?: 'organizer' | 'attendee' })
+    : Observable<EventSummary[]> {
+    let params = new HttpParams();
+    if (opts.q) params = params.set('q', opts.q);
+    if (opts.from) params = params.set('from', opts.from);
+    if (opts.to) params = params.set('to', opts.to);
+    if (opts.role) params = params.set('role', opts.role);
+    return this.http.get<EventSummary[]>(`${this.base}/search`, { params });
   }
 }

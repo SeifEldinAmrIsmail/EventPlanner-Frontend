@@ -1,23 +1,21 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
-function isExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1] || ''));
-    const expMs = (payload?.exp ?? 0) * 1000;
-    return !expMs || Date.now() >= expMs;
-  } catch {
+/**
+ * Blocks routes when the user is not authenticated.
+ * If blocked, redirects to /login and keeps the intended URL in ?redirect=...
+ */
+export const authGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isLoggedIn()) {
     return true;
   }
-}
 
-export const authGuard: CanActivateFn = (): boolean | UrlTree => {
-  const router = inject(Router);
-  const token = localStorage.getItem('access_token');
-
-  if (!token || isExpired(token)) {
-    localStorage.removeItem('access_token');
-    return router.parseUrl('/login');
-  }
-  return true;
+  // Send to /login and remember where the user wanted to go
+  return router.createUrlTree(['/login'], {
+    queryParams: { redirect: state.url },
+  });
 };

@@ -1,81 +1,68 @@
-<!-- Detail Page (no avatars, status dot list) -->
-<div class="page">
+<!-- Top pills -->
+<div class="top-pills">
+  <a routerLink="/home" class="pill" aria-label="Back to home">
+    <i class="bi bi-house"></i> Home
+  </a>
+  <a routerLink="/events" class="pill" aria-label="Back to events">
+    <i class="bi bi-arrow-left-short"></i> Events
+  </a>
+</div>
 
-  <!-- overlay while loading -->
+<!-- Screen background + centered card -->
+<div class="screen">
   <div class="loading" *ngIf="busy"></div>
 
-  <!-- top mini-nav -->
-  <div class="top-pills">
-    <a routerLink="/home" class="pill"><i class="bi bi-house"></i> Home</a>
-    <a routerLink="/events" class="pill"><i class="bi bi-list-ul"></i> Events</a>
+  <!-- Error / empty -->
+  <div class="card glass error" *ngIf="!busy && error && !event">
+    <h3>Couldn’t load event</h3>
+    <p class="muted">{{ error }}</p>
+  </div>
+  <div class="card glass empty" *ngIf="!busy && !error && !event">
+    <h3>Event not found</h3>
+    <p class="muted">The event you’re looking for doesn’t exist or was removed.</p>
   </div>
 
-  <!-- main card -->
-  <div class="card" *ngIf="event as e; else notFound">
-
-    <!-- header -->
-    <header class="header">
-      <div class="logo-glow"><i class="bi bi-calendar-event"></i></div>
+  <!-- Detail -->
+  <div class="card glass" *ngIf="event as e">
+    <header class="head">
+      <div class="icon-bubble"><i class="bi bi-calendar-event"></i></div>
       <h1 class="title">{{ e.title }}</h1>
 
       <div class="chips">
-        <span class="chip"><i class="bi bi-calendar3"></i> {{ e.date | date:'fullDate' }}</span>
-        <span class="chip"><i class="bi bi-clock"></i> {{ e.time }}</span>
-        <span class="chip" *ngIf="e.location"><i class="bi bi-geo-alt"></i> {{ e.location }}</span>
+        <div class="chip"><i class="bi bi-calendar3"></i> {{ e.date | date:'fullDate' }}</div>
+        <div class="chip"><i class="bi bi-clock"></i> {{ e.time }}</div>
+        <div class="chip" *ngIf="e.location"><i class="bi bi-geo-alt"></i> {{ e.location }}</div>
       </div>
     </header>
 
-    <!-- description -->
     <section class="desc" *ngIf="e.description">
       <p>{{ e.description }}</p>
     </section>
 
-    <!-- attendees (Option B: simple rows with status dot) -->
-    <section class="attendees-card" *ngIf="e.attendees?.length; else noAttendees">
-      <header class="attendees-head">
-        <h4>Attendees <span class="count">({{ e.attendees.length }})</span></h4>
-      </header>
+    <!-- Unified attendees (no status buckets) -->
+    <section class="attendees">
+      <div class="section-head">
+        <h3>Attendees <span class="count">({{ allAttendees.length }})</span></h3>
+      </div>
 
-      <ul class="attendees-list">
-        <li class="attendee-row" *ngFor="let a of e.attendees">
-          <span class="dot"
-                [class.ok]="a.status==='Going'"
-                [class.maybe]="a.status==='Maybe'"
-                [class.no]="a.status==='Not Going'"></span>
+      <ul class="people" *ngIf="allAttendees.length; else noAttendees">
+        <li class="person" *ngFor="let a of allAttendees">
+          <span class="avatar">{{ (a.email || '?')[0] | uppercase }}</span>
           <span class="email">{{ a.email }}</span>
-          <span class="status">
-            {{ a.status }} <span class="me" *ngIf="a.is_me">· you</span>
-          </span>
+          <span class="me" *ngIf="a.is_me">me</span>
         </li>
       </ul>
+      <ng-template #noAttendees>
+        <div class="muted">No attendees yet.</div>
+      </ng-template>
     </section>
 
-    <ng-template #noAttendees>
-      <section class="attendees-card empty">
-        <h4>Attendees</h4>
-        <p class="muted">No attendees yet.</p>
-      </section>
-    </ng-template>
-
-    <!-- danger zone -->
-    <div class="danger-zone">
+    <footer class="danger-zone">
       <button class="btn danger" (click)="deleteEvent()" [disabled]="busy">
         <i class="bi bi-trash"></i> Delete event
       </button>
-    </div>
+    </footer>
 
-    <!-- error toast -->
-    <div class="toast error" *ngIf="error">
-      <i class="bi bi-x-circle"></i> {{ error }}
-    </div>
+    <div class="inline-error" *ngIf="error">{{ error }}</div>
   </div>
-
-  <!-- fallback if not found -->
-  <ng-template #notFound>
-    <div class="card empty">
-      <h3>Event not found</h3>
-      <p class="muted">The event doesn’t exist or was removed.</p>
-      <a routerLink="/events" class="pill">Back to events</a>
-    </div>
-  </ng-template>
 </div>

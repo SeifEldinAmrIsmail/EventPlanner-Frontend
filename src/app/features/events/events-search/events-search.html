@@ -1,47 +1,71 @@
 <div class="page">
-  <form class="toolbar" [formGroup]="form" (ngSubmit)="submit()">
-    <div class="seg">
-      <button type="button"
-              class="seg-btn"
-              [class.active]="form.value.role === 'organizer'"
-              (click)="toggleRole('organizer')">Organizer</button>
-      <button type="button"
-              class="seg-btn"
-              [class.active]="form.value.role === 'attendee'"
-              (click)="toggleRole('attendee')">Invited</button>
-    </div>
+  <div class="loading" *ngIf="busy"></div>
 
-    <div class="search">
-      <input type="text" formControlName="q" placeholder="Search by title, place, date…" />
-    </div>
+  <div class="panel">
+    <header class="header">
+      <h2>Search events</h2>
+      <p class="sub">Filter by keyword, date range, and role.</p>
+    </header>
 
-    <button class="create" type="submit">Search</button>
-    <button class="create" type="button" (click)="clear()">Clear</button>
-  </form>
+    <form [formGroup]="form" class="filters" role="search">
+      <input
+        formControlName="q"
+        type="text"
+        class="input"
+        placeholder="Keywords: title, location…"
+        aria-label="Search keywords"
+      />
 
-  <div class="alerts">
-    <div class="toast error" *ngIf="error">{{ error }}</div>
-  </div>
+      <div class="dates">
+        <label>
+          <span>From</span>
+          <input formControlName="from" type="date" class="input" />
+        </label>
+        <label>
+          <span>To</span>
+          <input formControlName="to" type="date" class="input" />
+        </label>
+      </div>
 
-  <div class="card" *ngIf="results.length; else empty">
-    <div class="list">
+      <div class="seg">
+        <button type="button" class="seg-btn"
+                [class.active]="form.value.role==='all'"
+                (click)="form.patchValue({ role: 'all' })">All</button>
+        <button type="button" class="seg-btn"
+                [class.active]="form.value.role==='organizer'"
+                (click)="form.patchValue({ role: 'organizer' })">Organizer</button>
+        <button type="button" class="seg-btn"
+                [class.active]="form.value.role==='attendee'"
+                (click)="form.patchValue({ role: 'attendee' })">Attendee</button>
+
+        <button type="button" class="clear" (click)="clear()">Clear</button>
+      </div>
+    </form>
+
+    <div class="alert error" *ngIf="error">{{ error }}</div>
+
+    <div class="results" *ngIf="results.length; else none">
       <div class="row" *ngFor="let e of results">
         <div class="left">
           <div class="title">{{ e.title }}</div>
           <div class="meta">
-            <span>📅 {{ e.date | date: 'mediumDate' }}</span>
-            <span *ngIf="e.time">⏰ {{ e.time }}</span>
-            <span *ngIf="e.location">📍 {{ e.location }}</span>
+            <span>📅 {{ e.date | date:'mediumDate' }}</span>
+            <span>⏰ {{ e.time }}</span>
+            <span>📍 {{ e.location }}</span>
+            <!-- ✅ Avoid template type error even if EventSummary has no 'role' -->
+            <span class="role" *ngIf="$any(e).role">• {{$any(e).role}}</span>
           </div>
         </div>
         <div class="right">
-          <a class="btn view" [routerLink]="['/events', e.id]">View</a>
+          <a class="btn" [routerLink]="['/events', e.id]">View</a>
         </div>
       </div>
     </div>
-  </div>
 
-  <ng-template #empty>
-    <div class="card empty">No results.</div>
-  </ng-template>
+    <ng-template #none>
+      <div class="empty">
+        <p>No matching events.</p>
+      </div>
+    </ng-template>
+  </div>
 </div>
