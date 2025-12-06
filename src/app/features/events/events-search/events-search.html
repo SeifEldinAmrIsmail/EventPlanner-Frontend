@@ -1,71 +1,99 @@
 <div class="page">
-  <div class="loading" *ngIf="busy"></div>
+  <div class="glow"></div>
 
-  <div class="panel">
-    <header class="header">
-      <h2>Search events</h2>
-      <p class="sub">Filter by keyword, date range, and role.</p>
+  <section class="shell">
+    <!-- Header -->
+    <header class="hero">
+      <div class="icon-bubble">🔎</div>
+      <div>
+        <h1>Search events</h1>
+        <p class="sub">Filter by keyword, date range, and role.</p>
+      </div>
     </header>
 
-    <form [formGroup]="form" class="filters" role="search">
-      <input
-        formControlName="q"
-        type="text"
-        class="input"
-        placeholder="Keywords: title, location…"
-        aria-label="Search keywords"
-      />
+    <!-- Filters -->
+    <form class="panel glass" [formGroup]="form" role="search" (ngSubmit)="submit()">
+      <div class="filters">
+        <!-- Keyword (no inner white button) -->
+        <label class="field">
+          <span class="label">Keywords</span>
+          <div class="input">
+            <span class="i">⌕</span>
+            <input formControlName="q" type="text" placeholder="title, location…" />
+          </div>
+        </label>
 
-      <div class="dates">
-        <label>
-          <span>From</span>
-          <input formControlName="from" type="date" class="input" />
-        </label>
-        <label>
-          <span>To</span>
-          <input formControlName="to" type="date" class="input" />
-        </label>
+        <!-- Dates -->
+        <div class="dates">
+          <label class="field">
+            <span class="label">From</span>
+            <div class="input">
+              <span class="i">📅</span>
+              <input formControlName="date_from" type="date" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span class="label">To</span>
+            <div class="input">
+              <span class="i">📅</span>
+              <input formControlName="date_to" type="date" />
+            </div>
+          </label>
+        </div>
+
+        <!-- Role chips + actions -->
+        <div class="chips" aria-label="Role">
+          <button type="button" class="chip" [class.active]="form.value.role==='all'" (click)="setRole('all')">All</button>
+          <button type="button" class="chip" [class.active]="form.value.role==='organizer'" (click)="setRole('organizer')">Organizer</button>
+          <button type="button" class="chip" [class.active]="form.value.role==='attendee'" (click)="setRole('attendee')">Attendee</button>
+
+          <div class="spacer"></div>
+          <button type="button" class="btn ghost" (click)="clear()">Clear</button>
+          <button type="submit" class="btn primary">Search</button>
+        </div>
       </div>
 
-      <div class="seg">
-        <button type="button" class="seg-btn"
-                [class.active]="form.value.role==='all'"
-                (click)="form.patchValue({ role: 'all' })">All</button>
-        <button type="button" class="seg-btn"
-                [class.active]="form.value.role==='organizer'"
-                (click)="form.patchValue({ role: 'organizer' })">Organizer</button>
-        <button type="button" class="seg-btn"
-                [class.active]="form.value.role==='attendee'"
-                (click)="form.patchValue({ role: 'attendee' })">Attendee</button>
-
-        <button type="button" class="clear" (click)="clear()">Clear</button>
-      </div>
+      <div class="alert error" *ngIf="error">{{ error }}</div>
     </form>
 
-    <div class="alert error" *ngIf="error">{{ error }}</div>
-
-    <div class="results" *ngIf="results.length; else none">
-      <div class="row" *ngFor="let e of results">
-        <div class="left">
-          <div class="title">{{ e.title }}</div>
-          <div class="meta">
-            <span>📅 {{ e.date | date:'mediumDate' }}</span>
-            <span>⏰ {{ e.time }}</span>
-            <span>📍 {{ e.location }}</span>
-            <!-- ✅ Avoid template type error even if EventSummary has no 'role' -->
-            <span class="role" *ngIf="$any(e).role">• {{$any(e).role}}</span>
-          </div>
-        </div>
-        <div class="right">
-          <a class="btn" [routerLink]="['/events', e.id]">View</a>
-        </div>
+    <!-- Results -->
+    <section *ngIf="results.length; else empty">
+      <div class="result-head">
+        <span class="count-dot"></span>
+        <p class="count">Found <b>{{ results.length }}</b> {{ results.length === 1 ? 'result' : 'results' }}</p>
       </div>
-    </div>
 
-    <ng-template #none>
-      <div class="empty">
+      <div class="grid">
+        <article class="card" *ngFor="let e of results">
+          <div class="glow-bar"></div>
+
+          <div class="leading">
+            <div class="bubble">🗓️</div>
+          </div>
+
+          <div class="content">
+            <div class="title" [innerHTML]="highlight(e.title)"></div>
+            <div class="meta">
+              <span class="pill"><span class="i">📅</span>{{ e.date | date:'EEE, MMM d' }}</span>
+              <span class="pill" *ngIf="e.time"><span class="i">⏰</span>{{ e.time }}</span>
+              <span class="pill" *ngIf="e.location"><span class="i">📍</span>{{ e.location }}</span>
+              <span class="pill dim" *ngIf="$any(e).role">• {{$any(e).role}}</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <a class="btn small view" [routerLink]="['/events', e.id]">View</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <ng-template #empty>
+      <div class="empty glass">
+        <div class="empty-icon">✨</div>
         <p>No matching events.</p>
       </div>
     </ng-template>
-  </div>
+  </section>
 </div>

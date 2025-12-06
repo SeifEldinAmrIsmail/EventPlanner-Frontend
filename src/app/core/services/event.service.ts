@@ -45,13 +45,22 @@ export class EventService {
   }
 
   /** Search + filters */
-  search(opts: { q?: string; from?: string; to?: string; role?: 'organizer' | 'attendee' })
-    : Observable<EventSummary[]> {
-    let params = new HttpParams();
-    if (opts.q) params = params.set('q', opts.q);
-    if (opts.from) params = params.set('from', opts.from);
-    if (opts.to) params = params.set('to', opts.to);
-    if (opts.role) params = params.set('role', opts.role);
-    return this.http.get<EventSummary[]>(`${this.base}/search`, { params });
-  }
+search(params: {
+  q?: string;
+  date_from?: string;
+  date_to?: string;
+  role?: 'organizer' | 'attendee';
+}) {
+  const keyword = (params.q ?? '').trim();            // <-- path part
+  let hp = new HttpParams();
+  if (params.date_from) hp = hp.set('date_from', params.date_from);
+  if (params.date_to)   hp = hp.set('date_to', params.date_to);
+  if (params.role)      hp = hp.set('role', params.role);
+
+  // IMPORTANT: keyword goes in the path
+  return this.http.get<any[]>(
+    `${this.base}/search/${encodeURIComponent(keyword)}`,
+    { params: hp, withCredentials: true }
+  );
+}
 }
